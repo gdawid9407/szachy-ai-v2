@@ -3,8 +3,8 @@
 ## 1. Rejestr Stanu Pracy (Work State Ledger)
 
 - **Aktualna Faza:** Faza 1 – Stworzenie Silnika Gry w Szachy (Logika i Stan)
-- **Aktualne Zadanie:** Zadanie 1.1 – Implementacja `src/engine/board_manager.py` (obsługa planszy, legalne ruchy, back move)
-- **Ostatnio ukończone zadanie:** Zadanie 0.4 – Implementacja `src/config.py` (detekcja sprzętu i ścieżki)
+- **Aktualne Zadanie:** Zadanie 1.2 – Implementacja `src/engine/fen_parser.py` (wczytywanie i walidacja formatu FEN)
+- **Ostatnio ukończone zadanie:** Zadanie 1.1 – Implementacja `src/engine/board_manager.py` (obsługa planszy, legalne ruchy, back move)
 - **Aktywne blokery / Problemy:** Brak
 
 ### Zablokowane Niezmienniki Techniczne (Locked Invariants)
@@ -91,7 +91,7 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 
 ### Faza 1: Stworzenie Silnika Gry w Szachy (Logika i Stan)
 
-- [ ] **1.1** Implementacja `src/engine/board_manager.py` – obsługa planszy, sprawdzanie legalności ruchów, lista historii ruchów w aktualnej grze, funkcja cofania ruchu (`back move`).
+- [x] **1.1** Implementacja `src/engine/board_manager.py` – obsługa planszy, sprawdzanie legalności ruchów, lista historii ruchów w aktualnej grze, funkcja cofania ruchu (`back move`).
 - [ ] **1.2** Implementacja `src/engine/fen_parser.py` – wczytywanie i walidacja własnych ustawień szachownicy wygenerowanych np. na chess.com (format FEN).
 - [ ] **1.3** Testy weryfikacyjne silnika – sprawdzenie poprawności zasad, roszad, bicia w przelocie, mata, pata i cofania ruchów.
 
@@ -147,3 +147,4 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 
 - **[2026-10-22]** – Zdefiniowano strukturę projektu, niezmienniki architektoniczne oraz plan działania (Roadmapa).
 - **[2026-10-23]** – Ukończono Fazę 0: utworzono `requirements.txt`, zweryfikowano `pack_project.py` i zaimplementowano `src/config.py`.
+- **[2026-10-23]** – Ukończono Zadanie 1.1: zaimplementowano i przetestowano moduł `src/engine/board_manager.py` (obsługa planszy, legalne ruchy, back move, historia SAN/UCI).
