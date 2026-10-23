@@ -75,6 +75,11 @@ $RECYCLE.BIN/
 # IDE & Editor caches (preserve project .vscode settings if desired)
 .idea/
 *.sublime-project
-*.sublime-workspace
 .vscode/*
 !.vscode/settings.json
+
+
+# Packed project output files
+project_packed.txt
+*_packed.txt
+

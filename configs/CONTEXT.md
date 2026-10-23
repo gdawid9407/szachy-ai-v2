@@ -2,9 +2,9 @@
 
 ## 1. Rejestr Stanu Pracy (Work State Ledger)
 
-- **Aktualna Faza:** Faza 0 – Przygotowanie środowiska i konfiguracji
-- **Aktualne Zadanie:** Zadanie 0.1 – Zapisanie plików konfiguracyjnych `configs/PROJECT_INSTRUCTIONS.md` oraz `configs/CONTEXT.md`
-- **Ostatnio ukończone zadanie:** Brak (Inicjalizacja projektu)
+- **Aktualna Faza:** Faza 1 – Stworzenie Silnika Gry w Szachy (Logika i Stan)
+- **Aktualne Zadanie:** Zadanie 1.1 – Implementacja `src/engine/board_manager.py` (obsługa planszy, legalne ruchy, back move)
+- **Ostatnio ukończone zadanie:** Zadanie 0.4 – Implementacja `src/config.py` (detekcja sprzętu i ścieżki)
 - **Aktywne blokery / Problemy:** Brak
 
 ### Zablokowane Niezmienniki Techniczne (Locked Invariants)
@@ -84,10 +84,10 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 
 ### Faza 0: Przygotowanie Środowiska i Narzędzi Projektowych
 
-- [ ] **0.1** Utworzenie struktury katalogów oraz plików `configs/PROJECT_INSTRUCTIONS.md` i `configs/CONTEXT.md`.
-- [ ] **0.2** Utworzenie `requirements.txt` oraz `.gitignore`.
-- [ ] **0.3** Implementacja `pack_project.py` (narzędzie zbierające wszystkie pliki z kodem w jeden plik tekstowy dla Gemini).
-- [ ] **0.4** Implementacja `src/config.py` (automatyczne wykrywanie MacBook M2 `mps` vs PC `cuda`, definicja ścieżek `pathlib`).
+- [x] **0.1** Utworzenie struktury katalogów oraz plików `configs/PROJECT_INSTRUCTIONS.md` i `configs/CONTEXT.md`.
+- [x] **0.2** Utworzenie `requirements.txt` oraz `.gitignore`.
+- [x] **0.3** Implementacja `pack_project.py` (narzędzie zbierające wszystkie pliki z kodem w jeden plik tekstowy dla Gemini).
+- [x] **0.4** Implementacja `src/config.py` (automatyczne wykrywanie MacBook M2 `mps` vs PC `cuda`, definicja ścieżek `pathlib`).
 
 ### Faza 1: Stworzenie Silnika Gry w Szachy (Logika i Stan)
 
@@ -146,3 +146,4 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 ## 5. Dziennik Postępów (Progress Log)
 
 - **[2026-10-22]** – Zdefiniowano strukturę projektu, niezmienniki architektoniczne oraz plan działania (Roadmapa).
+- **[2026-10-23]** – Ukończono Fazę 0: utworzono `requirements.txt`, zweryfikowano `pack_project.py` i zaimplementowano `src/config.py`.
