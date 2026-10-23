@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import List, Optional
 import chess
 
+from src.engine.fen_parser import FenParser
+
 
 class BoardManager:
     """
@@ -94,18 +96,14 @@ class BoardManager:
         Returns:
             True jeśli FEN był poprawny i został załadowany, False w przeciwnym razie.
         """
-        if not isinstance(fen, str):
+        result = FenParser.validate(fen)
+        if not result.is_valid:
             return False
 
-        try:
-            new_board = chess.Board(fen.strip())
-            if not new_board.is_valid():
-                return False
-            self._board = new_board
-            self._san_history.clear()
-            return True
-        except (ValueError, AttributeError):
-            return False
+        assert result.cleaned_fen is not None
+        self._board = chess.Board(result.cleaned_fen)
+        self._san_history.clear()
+        return True
 
     def get_fen(self) -> str:
         """Zwraca aktualną pozycję w notacji FEN."""
