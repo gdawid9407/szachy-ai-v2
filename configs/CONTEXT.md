@@ -2,9 +2,9 @@
 
 ## 1. Rejestr Stanu Pracy (Work State Ledger)
 
-- **Aktualna Faza:** Faza 1 – Stworzenie Silnika Gry w Szachy (Logika i Stan)
-- **Aktualne Zadanie:** Zadanie 1.3 – Testy weryfikacyjne silnika – sprawdzenie poprawności zasad, roszad, bicia w przelocie, mata, pata i cofania ruchów
-- **Ostatnio ukończone zadanie:** Zadanie 1.2 – Implementacja `src/engine/fen_parser.py` (wczytywanie i walidacja formatu FEN)
+- **Aktualna Faza:** Faza 2 – Wygląd Szachownicy, Menu Gry i Tryby Rozgrywki (UI + Poziom 0 AI)
+- **Aktualne Zadanie:** Zadanie 2.3 – Implementacja `src/ui/menu.py` – obsługa opcji: wyjście (`exit`), cofnięcie ruchu (`back move`), wyświetlenie historii ruchów, wybór strony przed grą, zmiana strony w trakcie gry, załadowanie pozycji FEN, wybór trybu gry i poziomu AI
+- **Ostatnio ukończone zadanie:** Zadanie 2.2 – Implementacja `src/search/evaluator.py` (Część 1) oraz `tests/test_evaluator.py` (Poziom 0 AI: losowe legalne posunięcia, interfejs BaseEvaluator, Tier0RandomAI)
 - **Aktywne blokery / Problemy:** Brak
 
 ### Zablokowane Niezmienniki Techniczne (Locked Invariants)
@@ -93,12 +93,12 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 
 - [x] **1.1** Implementacja `src/engine/board_manager.py` – obsługa planszy, sprawdzanie legalności ruchów, lista historii ruchów w aktualnej grze, funkcja cofania ruchu (`back move`).
 - [x] **1.2** Implementacja `src/engine/fen_parser.py` – wczytywanie i walidacja własnych ustawień szachownicy wygenerowanych np. na chess.com (format FEN).
-- [ ] **1.3** Testy weryfikacyjne silnika – sprawdzenie poprawności zasad, roszad, bicia w przelocie, mata, pata i cofania ruchów.
+- [x] **1.3** Testy weryfikacyjne silnika – sprawdzenie poprawności zasad, roszad, bicia w przelocie, mata, pata i cofania ruchów.
 
 ### Faza 2: Wygląd Szachownicy, Menu Gry i Tryby Rozgrywki (UI + Poziom 0 AI)
 
-- [ ] **2.1** Implementacja `src/ui/board_view.py` – rysowanie dużej, przejrzystej szachownicy z oznaczeniami pól oraz miejscem na wskaźnik predykcji wygranej.
-- [ ] **2.2** Implementacja `src/search/evaluator.py` (Część 1) – stworzenie **Poziomu 0 AI (AI bez wiedzy)**, które wybiera losowe, ale w 100% legalne ruchy.
+- [x] **2.1** Implementacja `src/ui/board_view.py` – rysowanie dużej, przejrzystej szachownicy z oznaczeniami pól oraz miejscem na wskaźnik predykcji wygranej.
+- [x] **2.2** Implementacja `src/search/evaluator.py` (Część 1) – stworzenie **Poziomu 0 AI (AI bez wiedzy)**, które wybiera losowe, ale w 100% legalne ruchy.
 - [ ] **2.3** Implementacja `src/ui/menu.py` – obsługa opcji: wyjście (`exit`), cofnięcie ruchu (`back move`), wyświetlenie historii ruchów, wybór strony przed grą, zmiana strony w trakcie gry, załadowanie pozycji FEN, wybór trybu gry i poziomu AI.
 - [ ] **2.4** Implementacja `src/ui/game_controller.py` oraz `main.py` – połączenie planszy i menu w działającą grę obsługującą tryby: **Human vs Human**, **Human vs AI**, **AI vs AI**.
 
@@ -136,10 +136,10 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 
 ## 4. Rejestr Wersji Sieci Neuronowej (Model Version Summary)
 
-| ID Wersji     | Poziom AI          | Opis treningu i architektury      | Liczba parametrów | Głębokość (Search) | Status             |
-| :------------ | :----------------- | :-------------------------------- | :---------------- | :----------------- | :----------------- |
-| `v0.0-random` | Tier 0             | Brak sieci – losowe ruchy legalne | 0                 | 0                  | Planowany (Faza 2) |
-| `v1.0-init`   | Tier 1 (Untrained) | Sieć zainicjowana losowymi wagami | Do ustalenia      | 1                  | Planowany (Faza 4) |
+| ID Wersji     | Poziom AI          | Opis treningu i architektury      | Liczba parametrów | Głębokość (Search) | Status              |
+| :------------ | :----------------- | :-------------------------------- | :---------------- | :----------------- | :------------------ |
+| `v0.0-random` | Tier 0             | Brak sieci – losowe ruchy legalne | 0                 | 0                  | Ukończony (Faza 2)  |
+| `v1.0-init`   | Tier 1 (Untrained) | Sieć zainicjowana losowymi wagami | Do ustalenia      | 1                  | Planowany (Faza 4)  |
 
 ---
 
@@ -149,3 +149,6 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 - **[2026-10-23]** – Ukończono Fazę 0: utworzono `requirements.txt`, zweryfikowano `pack_project.py` i zaimplementowano `src/config.py`.
 - **[2026-10-23]** – Ukończono Zadanie 1.1: zaimplementowano i przetestowano moduł `src/engine/board_manager.py` (obsługa planszy, legalne ruchy, back move, historia SAN/UCI).
 - **[2026-10-23]** – Ukończono Zadanie 1.2: zaimplementowano moduł `src/engine/fen_parser.py` z dwuetapową walidacją (syntaktyczną i semantyczną) oraz polskojęzyczną diagnostyką błędów.
+- **[2026-10-28]** – Ukończono Zadanie 1.3 oraz całą Fazę 1: pełny pakiet 26 testów jednostkowych silnika (`test_board_manager.py`, `test_fen_parser.py`) zakończony sukcesem. Rozpoczęcie Fazy 2.
+- **[2026-10-28]** – Ukończono Zadanie 2.1: zaimplementowano moduł `src/ui/board_view.py` (wizualizacja szachownicy w terminalu, perspektywa Białe/Czarne, wyróżnianie ruchów ANSI, boczny panel stanu gry oraz pasek predykcji wygranej) wraz z pakietem 11 testów jednostkowych w `tests/test_board_view.py`. Łącznie 37 testów przechodzi pomyślnie.
+- **[2026-10-28]** – Ukończono Zadanie 2.2: zaimplementowano moduł `src/search/evaluator.py` (interfejs bazowy `BaseEvaluator`, Poziom 0 AI `RandomEvaluator`/`Tier0RandomAI` wybierający wyłącznie w 100% legalne ruchy bez sieci neuronowej) wraz z pakietem 9 testów jednostkowych w `tests/test_evaluator.py`. Łącznie 46 testów przechodzi pomyślnie.
