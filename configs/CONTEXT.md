@@ -3,8 +3,8 @@
 ## 1. Rejestr Stanu Pracy (Work State Ledger)
 
 - **Aktualna Faza:** Faza 2 – Wygląd Szachownicy, Menu Gry i Tryby Rozgrywki (UI + Poziom 0 AI)
-- **Aktualne Zadanie:** Zadanie 2.3 – Implementacja `src/ui/menu.py` – obsługa opcji: wyjście (`exit`), cofnięcie ruchu (`back move`), wyświetlenie historii ruchów, wybór strony przed grą, zmiana strony w trakcie gry, załadowanie pozycji FEN, wybór trybu gry i poziomu AI
-- **Ostatnio ukończone zadanie:** Zadanie 2.2 – Implementacja `src/search/evaluator.py` (Część 1) oraz `tests/test_evaluator.py` (Poziom 0 AI: losowe legalne posunięcia, interfejs BaseEvaluator, Tier0RandomAI)
+- **Aktualne Zadanie:** Zadanie 2.4 – Implementacja `src/ui/game_controller.py` oraz `main.py` – połączenie planszy i menu w działającą grę obsługującą tryby: Human vs Human, Human vs AI, AI vs AI
+- **Ostatnio ukończone zadanie:** Zadanie 2.3 – Implementacja `src/ui/menu.py` oraz `tests/test_menu.py` (menu wyboru trybów, stron i poziomów AI, parsowanie komend exit, back move, history, switch side, load FEN)
 - **Aktywne blokery / Problemy:** Brak
 
 ### Zablokowane Niezmienniki Techniczne (Locked Invariants)
@@ -99,7 +99,7 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 
 - [x] **2.1** Implementacja `src/ui/board_view.py` – rysowanie dużej, przejrzystej szachownicy z oznaczeniami pól oraz miejscem na wskaźnik predykcji wygranej.
 - [x] **2.2** Implementacja `src/search/evaluator.py` (Część 1) – stworzenie **Poziomu 0 AI (AI bez wiedzy)**, które wybiera losowe, ale w 100% legalne ruchy.
-- [ ] **2.3** Implementacja `src/ui/menu.py` – obsługa opcji: wyjście (`exit`), cofnięcie ruchu (`back move`), wyświetlenie historii ruchów, wybór strony przed grą, zmiana strony w trakcie gry, załadowanie pozycji FEN, wybór trybu gry i poziomu AI.
+- [x] **2.3** Implementacja `src/ui/menu.py` – obsługa opcji: wyjście (`exit`), cofnięcie ruchu (`back move`), wyświetlenie historii ruchów, wybór strony przed grą, zmiana strony w trakcie gry, załadowanie pozycji FEN, wybór trybu gry i poziomu AI.
 - [ ] **2.4** Implementacja `src/ui/game_controller.py` oraz `main.py` – połączenie planszy i menu w działającą grę obsługującą tryby: **Human vs Human**, **Human vs AI**, **AI vs AI**.
 
 ### Faza 3: Matematyczna Reprezentacja Szachownicy (Wejście/Wyjście dla AI)
@@ -152,3 +152,4 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 - **[2026-10-28]** – Ukończono Zadanie 1.3 oraz całą Fazę 1: pełny pakiet 26 testów jednostkowych silnika (`test_board_manager.py`, `test_fen_parser.py`) zakończony sukcesem. Rozpoczęcie Fazy 2.
 - **[2026-10-28]** – Ukończono Zadanie 2.1: zaimplementowano moduł `src/ui/board_view.py` (wizualizacja szachownicy w terminalu, perspektywa Białe/Czarne, wyróżnianie ruchów ANSI, boczny panel stanu gry oraz pasek predykcji wygranej) wraz z pakietem 11 testów jednostkowych w `tests/test_board_view.py`. Łącznie 37 testów przechodzi pomyślnie.
 - **[2026-10-28]** – Ukończono Zadanie 2.2: zaimplementowano moduł `src/search/evaluator.py` (interfejs bazowy `BaseEvaluator`, Poziom 0 AI `RandomEvaluator`/`Tier0RandomAI` wybierający wyłącznie w 100% legalne ruchy bez sieci neuronowej) wraz z pakietem 9 testów jednostkowych w `tests/test_evaluator.py`. Łącznie 46 testów przechodzi pomyślnie.
+- **[2026-10-28]** – Ukończono Zadanie 2.3: zaimplementowano moduł `src/ui/menu.py` (obsługa menu głównego, konfiguracja trybów Human vs Human, Human vs AI, AI vs AI, wybór stron i poziomów AI, parsowanie komend exit, back move, history, switch side, load FEN) wraz z pakietem 12 testów jednostkowych w `tests/test_menu.py`. Łącznie 58 testów przechodzi pomyślnie.
