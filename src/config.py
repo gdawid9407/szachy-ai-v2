@@ -39,6 +39,7 @@ MODEL_REGISTRY_FILE: Final[Path] = MODELS_DIR / "registry.md"
 
 # Katalog konfiguracji i specyfikacji
 CONFIGS_DIR: Final[Path] = ROOT_DIR / "configs"
+AGENTS_FILE: Final[Path] = CONFIGS_DIR / "AGENTS.md"
 PROJECT_INSTRUCTIONS_FILE: Final[Path] = CONFIGS_DIR / "PROJECT_INSTRUCTIONS.md"
 CONTEXT_FILE: Final[Path] = CONFIGS_DIR / "CONTEXT.md"
 

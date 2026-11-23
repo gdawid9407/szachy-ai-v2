@@ -2,21 +2,28 @@
 
 ## 1. Rola Systemów i Protokół Współpracy
 
-### 1.1 Podział Ról: Architekt (Gemini) vs Wykonawca (Antigravity) i Użytkownik
+### 1.1 Podział Ról: Instruktor Architektury (Gemini / Agent) vs Użytkownik
 
-- **Cel nadrzędny:** Nauka działania sztucznej inteligencji, procesu uczenia sieci neuronowej, jej wewnętrznej struktury, wag, parametrów oraz inżynierii oprogramowania na przykładzie budowy silnika szachowego w języku Python i bibliotece PyTorch.
-- **Zasada aktywnego uczenia (Active Learning):** Projekt jest realizowany powoli, małymi etapami (krok po kroku). Każdy moduł jest najpierw omawiany teoretycznie i architektonicznie (struktury danych, kształty tensorów, pseudokod).
-- **Weryfikacja założeń:** Wszystkie założenia projektowe podlegają krytycznej weryfikacji względem standardów inżynierii ML i silników szachowych. Błędne koncepcje są korygowane przed napisaniem kodu.
-- **Ton i komunikacja:** Język polski lub angielski (poziom B2), styl formalny, akademicki, obiektywny, pozbawiony zwrotów grzecznościowych i wypełniaczy.
-- **Wiedza:** Gdy brakuje informacji co do wykonania zadania dopytuj uzytkownika.
+- **Rola nadrzędna:** Instruktor Architektury Oprogramowania i Inżynierii ML (Programming Architecture & Engineering Instructor).
+- **Cel nadrzędny:** Nauka działania sztucznej inteligencji, procesu uczenia sieci neuronowej, jej wewnętrznej struktury, wag, parametrów oraz inżynierii oprogramowania na przykładzie budowy silnika szachowego w języku Python i bibliotece PyTorch, z perspektywą integracji z platformą webową (Laravel MVC).
+- **Zasada aktywnego uczenia (Metoda Sokratejska i Analityczna):**
+  - Projekt realizowany jest etapami (krok po kroku). Każdy moduł jest najpierw omawiany koncepcyjnie, teoretycznie i architektonicznie (struktury danych, kształty tensorów, analiza zysków i strat – trade-offs).
+  - Nie dostarczaj gotowych, zamkniętych rozwiązań „pod klucz” ani bezpośrednich poprawek kodu bez wyraźnego polecenia użytkownika.
+  - Prowadź użytkownika do samodzielnych decyzji implementacyjnych poprzez pytania naprowadzające i analizę alternatyw.
+  - Nie narzucaj przedwcześnie konkretnych bibliotek zewnętrznych ani pakietów frameworka; najpierw wyjaśnij leżący u podstaw protokół lub problem architektoniczny.
+- **Krytyczna Weryfikacja (Critical Verification):**
+  - Wszystkie założenia projektowe, kod i koncepcje traktuj jako hipotezy do weryfikacji.
+  - Wskazuj obiektywne błędy logiczne, luki bezpieczeństwa i antywzorce architektoniczne; wyjaśniaj mechanizm ich powstawania i proponuj poprawne technicznie alternatywy.
+- **Ton i komunikacja:** Język zgodny z językiem zapytania (polski lub angielski), styl formalny, akademicki, neutralny i bezpośredni. Brak zwrotów powitalnych, pożegnalnych i sztucznych uprzejmości.
+- **Wiedza i niejednoznaczności:** Gdy brakuje założeń do wykonania zadania, zadawaj precyzyjne pytania uściślające.
 
 ### 1.2 Protokół Interakcji (Sekwencja Obowiązkowa)
 
-1. **Context & Assumption Check:** Sprawdzenie aktualnej fazy w `configs/CONTEXT.md`. Weryfikacja założeń technicznych i logiki.
+1. **Context & Assumption Check:** Sprawdzenie aktualnej fazy w `configs/CONTEXT.md` oraz nadrzędnych wytycznych w `configs/AGENTS.md`. Weryfikacja założeń technicznych i logiki.
 2. **Conceptual & Architectural Breakdown:** Wyjaśnienie mechanizmów, teorii matematycznej, struktur danych i wymiarów tensorów przed implementacją.
-3. **Directional Guidance:** Dostarczenie modularnych schematów, pseudokodu oraz pytań naprowadzających bez generowania gotowych, zamkniętych skryptów.
-4. **Code Review & Optimization:** Analiza napisanego kodu pod kątem złożoności obliczeniowej, wąskich gardeł pamięciowych, poprawności wymiarów tensorów i przypadków brzegowych.
-5. **Slow Implementation:** Realizacja powolna, etapowa, gwarantująca pełne zrozumienie każdego wiersza kodu i każdego parametru sieci.
+3. **Directional Guidance & Alternatives:** Dostarczenie modularnych schematów, pseudokodu, analizy trade-off oraz pytań diagnostycznych.
+4. **Code Review & Optimization:** Analiza kodu pod kątem złożoności obliczeniowej ($O(n)$), wąskich gardeł pamięciowych, poprawności wymiarów tensorów i przypadków brzegowych.
+5. **Slow Implementation & Verification:** Etapowa realizacja gwarantująca pełne zrozumienie każdego wiersza kodu i każdego parametru sieci, weryfikowana testami jednostkowymi.
 
 ---
 
@@ -37,6 +44,21 @@
 - **Przenośność sprzętowa:** Automatyczna detekcja urządzenia obliczeniowego w kolejności: `cuda` -> `mps` -> `cpu`.
 - **Ochrona pamięci RAM (16 GB Limit):** Bezwzględny zakaz ładowania całych plików tekstowych PGN do pamięci RAM podczas treningu. Wymagane użycie plików binarnych i strumieniowania z dysku przez `numpy.memmap`.
 - **Narzędzie scalające (`pack_project.py`):** W głównym katalogu znajduje się skrypt łączący wszystkie pliki konfiguracyjne i kod źródłowy w jeden plik tekstowy, umożliwiający szybkie przesłanie pełnego stanu projektu do analizy.
+
+### 2.3 Środowisko Uruchomieniowe i Konteneryzacja (Docker & Hybrid Runtime)
+
+Projekt przyjmuje model hybrydowy dopasowany do specyfiki obliczeń ML i usług sieciowych:
+
+1. **Natywne środowisko Python (`.venv`):**
+   - Obowiązkowe dla fazy badawczej, rozwoju silnika, treningu sieci oraz inspekcji wag (Fazy 0–7).
+   - Zapewnia bezpośredni i bezstratny dostęp do akceleratorów sprzętowych: Apple Silicon Metal (`mps`) na macOS oraz NVIDIA CUDA (`cuda`) na PC z Windows 11 / Linuksem, bez narzutu wirtualizacji kontenerowej.
+2. **Konteneryzacja Docker & Docker Compose:**
+   - Dedykowana dla platformy webowej i usług pomocniczych (Faza 8).
+   - Konteneryzacji podlegają:
+     - Relacyjna baza danych (PostgreSQL lub MySQL).
+     - Serwer testowej poczty transakcyjnej (`Mailpit` – obsługa weryfikacji e-mail i resetowania haseł w środowisku lokalnym bez zewnętrznego SMTP).
+     - Aplikacja webowa Laravel (PHP-FPM, Composer, Nginx – np. przez Laravel Sail lub dedykowany `docker-compose.yml`).
+     - Bezstanowy mikroserwis Python API spięty wspólną siecią mostkową (`docker network`).
 
 ---
 
@@ -77,41 +99,85 @@ Zamiast prostej sieci oceniającej tylko pojedynczą planszę, stosujemy archite
 1. **Głowica Polityki (Policy Head):** Wskazuje, które ruchy na planszy są najbardziej obiecujące (zwraca rozkład prawdopodobieństwa dla 4672 ruchów).
 2. **Głowica Wartości (Value Head):** Ocenia aktualną sytuację na szachownicy, zwracając liczbę z przedziału `[-1.0, 1.0]` (`-1.0` = pewna przegrana, `0.0` = remis, `+1.0` = pewna wygrana).
 
+### 3.5 Integracja Zewnętrznych Silników Szachowych (Protokół UCI)
+
+System przewiduje dwukierunkową komunikację z zewnętrznymi silnikami szachowymi (np. Stockfish) poprzez uniwersalny protokół **UCI (Universal Chess Interface)**:
+
+- **Regulacja siły gry:** Możliwość ograniczania siły silnika zewnętrznego poprzez konfigurowalny limit Elo (`UCI_LimitStrength`, `UCI_Elo`) lub poziom trudności (`Skill Level`).
+- **Funkcja w systemie:**
+  - Niezależny punkt odniesienia (ground-truth baseline) do obiektywnej ewaluacji własnych sieci neuronowych.
+  - Opcjonalne źródło destylacji wiedzy (**Knowledge Distillation**) w procesie headless training.
+  - Elastyczny przeciwnik w trybach `Human vs AI` oraz `AI vs AI`.
+
 ---
 
 ## 4. Specyfikacja Funkcjonalna Gry i Systemu AI
 
-### 4.1 Silnik Gry w Szachy i Interfejs (UI)
+### 4.1 Moduł Rozgrywki i Inferencji (Gameplay & Evaluation)
 
-- **Wygląd szachownicy:** Duża, przejrzysta szachownica z wyraźnymi oznaczeniami kolumn (`a-h`), wierszy (`1-8`), symbolami bierek i podświetleniem ostatniego ruchu.
-- **Menu gry:**
+Interfejs terminalowy (CLI) z czytelną separacją warstwy prezentacji, umożliwiającą późniejsze podpięcie interfejsu graficznego (GUI) oraz integrację webową:
+
+- **Wygląd szachownicy:** Duża, przejrzysta szachownica z wyraźnymi oznaczeniami kolumn (`a-h`), wierszy (`1-8`), symbolami bierek (Unicode/ASCII) i podświetleniem ostatniego ruchu (ANSI).
+- **Menu gry i komendy:**
   - `exit` – bezpieczne opuszczenie gry.
   - `back move` – cofnięcie ruchu (wraz z przywróceniem stanu sprzed ruchu).
   - `history` – wyświetlenie pełnej listy ruchów wykonanych w aktualnej grze.
   - `side select` – wybór koloru bierek przed rozpoczęciem partii.
   - `switch side` – dynamiczna zmiana strony (przejęcie bierek przeciwnika) w trakcie trwania gry.
-  - `load board (FEN)` – wczytanie dowolnego ustawienia szachownicy utworzonego np. w edytorze na chess.com za pomocą kodu FEN i rozpoczęcie gry od tej pozycji.
-- **Tryby rozgrywki (Kto gra z kim):**
-  - `Human vs Human` (Człowiek przeciwko Człowiekowi).
-  - `Human vs AI` (Człowiek przeciwko Sztucznej Inteligencji).
-  - `AI vs AI` (Mecz dwóch wybranych wersji/poziomów AI przeciwko sobie).
+  - `load board (FEN)` – wczytanie dowolnego ustawienia szachownicy z notacji FEN (z walidacją syntaktyczną i semantyczną).
+- **Tryby rozgrywki:**
+  - `Human vs Human` – klasyczna partia dwuosobowa.
+  - `Human vs AI` – gra człowieka przeciwko wybranej sieci neuronowej lub zewnętrznemu silnikowi UCI. Zawiera **tryb diagnostyczno-testowy** z podglądem na żywo telemetryki modelu (wektor prawdopodobieństw ruchów, ocena pozycji Value, statystyki przeszukiwania).
+  - `AI vs AI` – pojedyncze pojedynki oraz **wielopartiowe turnieje porównawcze (multi-game benchmarks)** do obiektywnego rankingu modeli i badania postępów uczenia.
 
-### 4.2 Poziomy Wytrenowania AI (Tiers)
+### 4.2 Potok Treningowy (Headless Training Pipeline)
 
-Użytkownik przed grą lub w jej trakcie może wybrać poziom AI:
+Proces treningu sieci neuronowej jest w pełni odseparowany (headless) od interfejsu interaktywnego i wspiera różnorodne paradygmaty uczenia:
 
-- **Poziom 0 (AI bez wiedzy):** Wybiera losowe posunięcia spośród ruchów dozwolonych przez przepisy.
-- **Poziom 1 (AI z gier historycznych – Supervised Learning):** Sieć wytrenowana na bazie zapisów partii silnych graczy pobranych z internetu.
-- **Poziom 2 (AI z gier własnych – Self-Play RL):** Sieć wytrenowana poprzez rozgrywanie tysięcy partii AI vs AI i uczenie się na własnych błędach oraz zwycięstwach.
-- **Poziom 3 (Połączenie wszystkiego – Hybrid Engine):** Połączenie sieci wyuczonej na grach historycznych i Self-Play z algorytmem głębokiego przeszukiwania drzewa gry w przód.
+- **Poziom 0 (AI bez wiedzy):** Losowe ruchy legalne (baza odniesienia i test integralności silnika).
+- **Poziom 1 (Supervised Learning):** Uczenie nadzorowane na historycznych bazach partii mistrzowskich (PGN) konwertowanych do strumieniowanych plików binarnych (`numpy.memmap`).
+- **Poziom 2 (Reinforcement Learning via Self-Play):** Uczenie ze wzmocnieniem w pętli AlphaZero – sieć gra sama ze sobą, generując dane treningowe i ewoluując bez wiedzy eksperckiej.
+- **Poziom 3 (Hybrid Engine):** Połączenie wyuczonej sieci z algorytmem głębokiego przeszukiwania drzewa gry (MCTS / Alpha-Beta).
+- **Uczenie transferowe i gałęziowe (Transfer & Branching Learning):** Możliwość kontynuacji treningu w nowych gałęziach badawczych bez nadpisywania wag modeli bazowych.
+- **Destylacja wiedzy (Knowledge Distillation – opcjonalna):** Trenowanie głowic sieci w oparciu o ewaluacje i rozkłady generowane przez silniki UCI o wysokim Elo.
 
-### 4.3 Parametry Silnika AI, Inspekcja i Wersjonowanie
+### 4.3 Zarządzanie Modelami, Obserwowalność i Wersjonowanie
 
-- **Wskaźnik predykcji wygranej:** Wyświetlany na żywo przy szachownicy pasek/procent szans na zwycięstwo każdej ze stron, obliczany bezpośrednio z wyjścia Głowicy Wartości sieci neuronowej: `Szansa (%) = ((Value + 1) / 2) * 100`.
-- **Moc sieci i głębokość przewidywania:** Możliwość konfiguracji, na ile ruchów w przód (głębokość drzewa przeszukiwania) AI analizuje warianty oraz jak działa przy aktualnie ustawionych parametrach.
-- **Pełny wgląd w sieć neuronową (`inspector.py`):** Narzędzie edukacyjne pozwalające w każdej chwili podejrzeć:
-  - Liczbę warstw i dokładną liczbę parametrów (wag) w każdej warstwie.
-  - Rozkład wartości wag oraz wartości gradientów podczas nauki (zrozumienie, jak sieć modyfikuje swoją wiedzę).
-  - Aktywacje poszczególnych warstw (zobaczenie, na które pola szachownicy „zwraca uwagę” dana warstwa splotowa).
-  - Poziom niepewności sieci (entropia decyzji) przy wyborze ruchu.
-- **Wersjonowanie sieci neuronowej (`version_manager.py` i `models/registry.md`):** Każda zapisana wersja sieci posiada swój identyfikator, opis sposobu trenowania, liczbę rozegranych epok/gier, parametry architektury oraz zmierzoną siłę gry.
+- **Deklaratywna konfiguracja:** Pełna parametryzacja statyczna (liczba bloków rezydualnych, filtry, wymiary) oraz dynamiczna (learning rate, batch size, parametry MCTS/przeszukiwania) z poziomu plików konfiguracyjnych.
+- **Kontrola cyklu życia (Lifecycle Control):** Mechanizmy bezpiecznego pauzowania, wznawiania i tworzenia punktów kontrolnych (checkpoints) podczas długich sesji treningowych.
+- **Śledzenie rodowodu eksperymentów (Experiment Lineage Tracking):** Rejestr `models/registry.md` dokumentujący historię powstania modelu, gałęzie rodzicielskie, liczbę epok, parametry oraz uzyskany ranking turniejowy.
+- **Pełny wgląd w sieć neuronową (`inspector.py`):**
+  - Architektura: liczba warstw, parametry wagowe, rozkład wag i gradientów.
+  - Telemetria inferencji: aktywacje warstw konwolucyjnych (mapy cech), wskaźnik entropii/pewności wyboru ruchu.
+  - Wskaźnik predykcji wygranej: live evaluation bar $\text{Szansa } (\%) = \frac{\text{Value} + 1}{2} \times 100\%$.
+
+---
+
+## 5. Integracja z Platformą Webową (Laravel MVC & Stateless API)
+
+Drugi etap projektu obejmuje integrację silnika szachowego i modeli AI z pełnoprawną platformą webową opartą o wzorzec MVC w ekosystemie Laravel:
+
+### 5.1 Rola Serwisu Python (AI & Engine Microservice)
+- Działa w trybie bezstanowym (stateless), wystawiając wewnętrzne API HTTP/JSON.
+- Odpowiada za: walidację stanu gry, generowanie legalnych posunięć, obliczanie inferencji sieci neuronowych (predykcja ruchu, ocena pozycji Value) oraz delegowanie zapytań do silników UCI.
+
+### 5.2 Rola Platformy Webowej (Laravel MVC)
+- **Warstwa użytkownika i persystencji:** Odpowiada za autoryzację, sesje, zapis partii w relacyjnej bazie danych oraz interfejs graficzny.
+- **Bezpieczeństwo i uwierzytelnianie:**
+  - System rejestracji i logowania użytkowników.
+  - Uwierzytelnianie dwuskładnikowe (Two-Factor Authentication – 2FA).
+- **Zarządzanie kontami i rozgrywkami:**
+  - Profile graczy, statystyki, historia rozegranych partii i zapis posunięć (PGN/SAN).
+  - System rankingowy graczy i modeli AI.
+- **Transakcyjny mailing:** Obsługa powiadomień e-mail (weryfikacja adresu, procedury resetowania hasła, powiadomienia o zdarzeniach).
+
+### 5.3 Równoległa Ścieżka Realizacji i Grywalne MVP (Parallel Track & Early Playability)
+
+Rozwój platformy webowej Laravel nie musi czekać na pełne zakończenie treningu sieci neuronowej (Fazy 4–6):
+
+- **Wykorzystanie okien czasowych (Przestoje i Długi Trening):**
+  Długotrwałe sesje treningowe (wielogodzinny proces uczenia nadzorowanego PGN oraz wielodniowe pętle Self-Play RL na RTX 3070) stanowią idealny moment na równoległą realizację platformy Laravel oraz orkiestracji w Dockerze.
+- **Wczesne MVP z silnikiem zewnętrznym UCI:**
+  Gdy tylko silnik szachowy w Pythonie osiągnie status MVP (obsługa planszy, legalność reguł, bezstanowe API oraz adapter do silnika zewnętrznego UCI, np. Stockfish z regulowanym rankingiem Elo), platforma webowa może zostać wdrożona i uruchomiona natychmiast.
+- **Korzyść użytkowa:**
+  Gracz otrzymuje w pełni funkcjonalną grę szachową online (konta, 2FA, zapis gier, gra przeciwko silnikowi szachowemu) na wczesnym etapie, a wytrenowane autorskie sieci neuronowe są podpinane do API jako kolejne poziomy trudności AI natychmiast po ukończeniu ich uczenia.
