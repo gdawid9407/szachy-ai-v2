@@ -99,7 +99,7 @@ class BoardView:
         black_pct = 100.0 - white_pct
 
         # Obliczenie proporcji wypełnienia paska
-        white_blocks = int(round((white_pct / 100.0) * self.eval_bar_width))
+        white_blocks = round((white_pct / 100.0) * self.eval_bar_width)
         white_blocks = max(0, min(self.eval_bar_width, white_blocks))
         black_blocks = self.eval_bar_width - white_blocks
 

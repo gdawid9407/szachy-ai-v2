@@ -3,5 +3,5 @@
     "**/._*": true,
     "**/.DS_Store": true
   },
-  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python"
+  "python.defaultInterpreterPath": ".venv/bin/python"
 }

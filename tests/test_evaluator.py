@@ -98,7 +98,7 @@ class TestRandomEvaluator(unittest.TestCase):
             move1 = ai1.select_move(board1)
             move2 = ai2.select_move(board2)
             self.assertEqual(move1, move2)
-            if move1 is None:
+            if move1 is None or move2 is None:
                 break
             board1.push(move1)
             board2.push(move2)
