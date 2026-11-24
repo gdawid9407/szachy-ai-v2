@@ -143,13 +143,17 @@ Proces treningu sieci neuronowej jest w pełni odseparowany (headless) od interf
 
 ### 4.3 Zarządzanie Modelami, Obserwowalność i Wersjonowanie
 
-- **Deklaratywna konfiguracja:** Pełna parametryzacja statyczna (liczba bloków rezydualnych, filtry, wymiary) oraz dynamiczna (learning rate, batch size, parametry MCTS/przeszukiwania) z poziomu plików konfiguracyjnych.
-- **Kontrola cyklu życia (Lifecycle Control):** Mechanizmy bezpiecznego pauzowania, wznawiania i tworzenia punktów kontrolnych (checkpoints) podczas długich sesji treningowych.
-- **Śledzenie rodowodu eksperymentów (Experiment Lineage Tracking):** Rejestr `models/registry.md` dokumentujący historię powstania modelu, gałęzie rodzicielskie, liczbę epok, parametry oraz uzyskany ranking turniejowy.
-- **Pełny wgląd w sieć neuronową (`inspector.py`):**
-  - Architektura: liczba warstw, parametry wagowe, rozkład wag i gradientów.
-  - Telemetria inferencji: aktywacje warstw konwolucyjnych (mapy cech), wskaźnik entropii/pewności wyboru ruchu.
-  - Wskaźnik predykcji wygranej: live evaluation bar $\text{Szansa } (\%) = \frac{\text{Value} + 1}{2} \times 100\%$.
+- **Deklaratywna konfiguracja:** Pełna parametryzacja statyczna (liczba bloków rezydualnych, filtry, wymiary) oraz dynamiczna (learning rate, batch size, parametry MCTS/przeszukiwania) z poziomu plików konfiguracyjnych (`configs/default_config.yaml`).
+- **Bezstratna kontrola cyklu życia (Lossless Lifecycle Control):** Mechanizmy bezpiecznego pauzowania, wznawiania, rozgałęziania eksperymentów (*branching*) i tworzenia punktów kontrolnych (*checkpoints*). Aby wznowienie było rzeczywiście bezstratne, każdy plik checkpointu (`.pt`) musi zawierać pełny kontrakt stanu:
+  - `model_state_dict` – wagi sieci neuronowej,
+  - `optimizer_state_dict` oraz `scheduler_state_dict` – bufory momentów optymalizatora i stan harmonogramu *learning rate* (eliminacja skoku straty po wznowieniu),
+  - `epoch`, `global_step` oraz opcjonalnie stany generatorów losowych (`rng_states`),
+  - `config_snapshot` – pełna migawka konfiguracji statycznej i dynamicznej z chwili zapisu,
+  - `metadata` – `version_id`, `parent_id` (rodowód), paradygmat treningu i metryki straty.
+- **Śledzenie rodowodu eksperymentów (Experiment Lineage Tracking):** Rejestr `models/registry.md` dokumentujący drzewo wersji modeli, gałęzie rodzicielskie (`parent_id`), liczbę epok, parametry oraz uzyskany ranking turniejowy.
+- **Pełny wgląd w sieć neuronową (`inspector.py` i telemetria):**
+  - **Telemetria treningowa (w trakcie uczenia):** krzywe straty (Policy / Value / Total Loss), normy i rozkład gradientów, dynamika wag, bieżący *learning rate* oraz czas kroku.
+  - **Introspekcja wnioskowania (na żywo w inferencji):** liczba parametrów, aktywacje warstw konwolucyjnych (mapy cech), rozkład prawdopodobieństwa ruchów (Policy), ocena pozycji (Value), entropia decyzji, statystyki drzewa przeszukiwania (MCTS) oraz wskaźnik predykcji wygranej $\text{Szansa } (\%) = \frac{\text{Value} + 1}{2} \times 100\%$.
 
 ---
 

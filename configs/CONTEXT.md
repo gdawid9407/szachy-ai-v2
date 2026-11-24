@@ -2,7 +2,7 @@
 
 ## 1. Rejestr Stanu Pracy (Work State Ledger)
 
-- **Aktualna Faza:** Faza 2 – Wygląd Szachownicy, Menu Gry i Tryby Rozgrywki (UI + Poziom 0 AI)
+- **Aktualna Faza:** Faza 2 – Interfejs Gry, Menu, Poziom 0 AI i Zewnętrzny Silnik UCI (Grywalne MVP)
 - **Aktualne Zadanie:** Zadanie 2.4 – Implementacja `src/ui/game_controller.py` oraz `main.py` – połączenie planszy i menu w działającą grę obsługującą tryby: Human vs Human, Human vs AI, AI vs AI
 - **Ostatnio ukończone zadanie:** Zadanie 2.3 – Implementacja `src/ui/menu.py` oraz `tests/test_menu.py` (menu wyboru trybów, stron i poziomów AI, parsowanie komend exit, back move, history, switch side, load FEN)
 - **Aktywne blokery / Problemy:** Brak
@@ -26,14 +26,15 @@
     ├── configs/
     │   ├── AGENTS.md                   # [Plik 0] Rola instruktora, protokół pedagogiczny, nadrzędne wytyczne systemu
     │   ├── PROJECT_INSTRUCTIONS.md     # [Plik 1] Szczegółowa specyfikacja inżynieryjna + opis modułów
-    │   └── CONTEXT.md                  # [Plik 2] Rejestr stanu + Struktura plików + Roadmapa zadań
+    │   ├── CONTEXT.md                  # [Plik 2] Rejestr stanu + Struktura plików + Roadmapa zadań
+    │   └── default_config.yaml         # [Faza 4] Deklaratywna konfiguracja parametrów sieci, treningu i przeszukiwania
     │
     ├── data/
     │   ├── raw/                        # Surowe pliki PGN z historycznymi partiami szachowymi
     │   └── processed/                  # Przetworzone pliki binarne pod np.memmap (states.bin, targets.bin)
     │
     ├── models/
-    │   ├── checkpoints/                # Zapisane wagi sieci neuronowej (.pt) z procesów treningowych
+    │   ├── checkpoints/                # Bezstratne checkpointy (.pt: wagi, optimizer, scheduler, config, lineage)
     │   └── registry.md                 # Katalog wersji modeli i rodowód eksperymentów (lineage tracking)
     │
     ├── src/
@@ -44,7 +45,7 @@
     │   │   ├── __init__.py
     │   │   ├── board_manager.py        # Zarządzanie planszą, legalne ruchy, cofanie (back move), historia gry
     │   │   ├── fen_parser.py           # Walidacja i ładowanie pozycji z notacji FEN (np. z chess.com)
-    │   │   └── uci_engine.py           # Klient zewnętrznych silników szachowych UCI (Stockfish) z kontrolą siły Elo
+    │   │   └── uci_engine.py           # [MVP] Klient zewnętrznych silników szachowych UCI (Stockfish) z kontrolą siły Elo
     │   │
     │   ├── ui/                         # Interfejs gry, szachownica i menu (CLI)
     │   │   ├── __init__.py
@@ -67,12 +68,13 @@
     │   ├── search/                     # Silnik decyzyjny AI, przeszukiwanie i benchmarki
     │   │   ├── __init__.py
     │   │   ├── evaluator.py            # Obliczanie wskaźnika predykcji wygranej (%) oraz AI bez wiedzy (losowe)
-    │   │   ├── search_tree.py          # Algorytm przewidywania ruchów w głąb (przeszukiwanie drzewa gry MCTS)
+    │   │   ├── search_tree.py          # Algorytm przewidywania ruchów w głąb (MCTS / Alpha-Beta) + statystyki drzewa
     │   │   └── benchmark.py            # Wielopartiowe turnieje porównawcze modeli (multi-game benchmarks)
     │   │
     │   ├── training/                   # Headless potok nauki sieci neuronowej
     │   │   ├── __init__.py
     │   │   ├── dataset.py              # Bezpieczne ładowanie danych z dysku (np.memmap)
+    │   │   ├── trainer.py              # [Faza 5] Orkiestrator headless (pause, resume, checkpointing, telemetria)
     │   │   ├── supervised.py           # Nauka na podstawie historycznych gier z internetu (PGN)
     │   │   ├── self_play.py            # Nauka na podstawie gry AI vs AI (samouczenie AlphaZero)
     │   │   └── transfer.py             # Uczenie transferowe, gałęzie modeli i destylacja wiedzy (UCI)
@@ -81,10 +83,19 @@
     │       ├── __init__.py
     │       └── app.py                  # Endpointy inferencji, walidacji stanu i ewaluacji pozycji
     │
+    ├── tests/                          # Testy jednostkowe i integracyjne wszystkich modułów
+    │   ├── test_board_manager.py
+    │   ├── test_fen_parser.py
+    │   ├── test_board_view.py
+    │   ├── test_evaluator.py
+    │   └── test_menu.py
+    │
     ├── pack_project.py                 # Skrypt scalający cały kod projektu do jednego pliku dla Gemini
-    ├── main.py                         # Główny plik uruchomieniowy gry i systemu
+    ├── main.py                         # Główny plik uruchomieniowy gry CLI
+    ├── train.py                        # [Faza 5] Niezależny punkt wejścia dla headless treningu (CLI/background)
     ├── requirements.txt                # Lista bibliotek (torch, chess, numpy, tqdm)
-    ├── docker-compose.yml              # Orkiestracja usług webowych (baza danych, Mailpit, Laravel)
+    ├── Dockerfile                      # [Faza 8] Obraz kontenera dla bezstanowego mikroserwisu Python API
+    ├── docker-compose.yml              # [Faza 8] Orkiestracja usług webowych (baza danych, Mailpit, Laravel, API)
     └── .gitignore                      # Wykluczenia plików tymczasowych, dużych baz danych i modeli
 
 ---
@@ -106,12 +117,13 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 - [x] **1.2** Implementacja `src/engine/fen_parser.py` – wczytywanie i walidacja własnych ustawień szachownicy wygenerowanych np. na chess.com (format FEN).
 - [x] **1.3** Testy weryfikacyjne silnika – sprawdzenie poprawności zasad, roszad, bicia w przelocie, mata, pata i cofania ruchów.
 
-### Faza 2: Wygląd Szachownicy, Menu Gry i Tryby Rozgrywki (UI + Poziom 0 AI)
+### Faza 2: Interfejs Gry, Menu, Poziom 0 AI i Zewnętrzny Silnik UCI (Grywalne MVP)
 
 - [x] **2.1** Implementacja `src/ui/board_view.py` – rysowanie dużej, przejrzystej szachownicy z oznaczeniami pól oraz miejscem na wskaźnik predykcji wygranej.
 - [x] **2.2** Implementacja `src/search/evaluator.py` (Część 1) – stworzenie **Poziomu 0 AI (AI bez wiedzy)**, które wybiera losowe, ale w 100% legalne ruchy.
 - [x] **2.3** Implementacja `src/ui/menu.py` – obsługa opcji: wyjście (`exit`), cofnięcie ruchu (`back move`), wyświetlenie historii ruchów, wybór strony przed grą, zmiana strony w trakcie gry, załadowanie pozycji FEN, wybór trybu gry i poziomu AI.
 - [ ] **2.4** Implementacja `src/ui/game_controller.py` oraz `main.py` – połączenie planszy i menu w działającą grę obsługującą tryby: **Human vs Human**, **Human vs AI**, **AI vs AI**.
+- [ ] **2.5** Implementacja `src/engine/uci_engine.py` – **Zewnętrzny silnik UCI (np. Stockfish)** z konfigurowalnym limitem siły gry (`UCI_LimitStrength`, `UCI_Elo` / `Skill Level`) oraz integracja z kontrolerem gry. *(Domyka grywalne MVP i odblokowuje równoległą realizację Fazy 8 – Laravel MVC).*
 
 ### Faza 3: Matematyczna Reprezentacja Szachownicy (Wejście/Wyjście dla AI)
 
@@ -119,38 +131,39 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 - [ ] **3.2** Zrozumienie i implementacja `src/representation/move_encoder.py` – zamiana każdego możliwego ruchu w szachach na indeks liczbowy (od `0` do `4671`) oraz maskowanie ruchów nielegalnych.
 - [ ] **3.3** Testy reprezentacji – wizualne sprawdzenie, jak komputer „widzi” poszczególne warstwy szachownicy.
 
-### Faza 4: Budowa Sieci Neuronowej, Wgląd w Strukturę i Wersjonowanie
+### Faza 4: Konfiguracja Deklaratywna, Budowa Sieci Neuronowej, Inspekcja i Wersjonowanie
 
-- [ ] **4.1** Implementacja `src/neural/architectures.py` – budowa sieci neuronowej (warstwy splotowe, bloki rezydualne, głowica oceniająca szanse na wygraną Value Head, głowica wybierająca ruchy Policy Head).
-- [ ] **4.2** Implementacja `src/search/evaluator.py` (Część 2) – podłączenie **Wskaźnika predykcji wygranej** (przeliczanie wyjścia sieci `[-1, 1]` na procentową szansę zwycięstwa na żywo podczas gry).
-- [ ] **4.3** Implementacja `src/neural/inspector.py` – narzędzia edukacyjne dające pełny wgląd w sieć: podgląd liczby parametrów, wartości wag, aktywacji poszczególnych warstw, gradientów oraz pewności decyzji AI.
-- [ ] **4.4** Implementacja `src/neural/version_manager.py` oraz `models/registry.md` – system zapisywania, wczytywania i opisywania poszczególnych wersji sieci neuronowej.
-- [ ] **4.5** Implementacja `src/neural/loss.py` – matematyczna funkcja straty mówiąca sieci, jak bardzo pomyliła się w ocenie pozycji i wyborze ruchu.
+- [ ] **4.1** Deklaratywna konfiguracja (`configs/default_config.yaml` oraz rozszerzenie `src/config.py`) – wydzielenie parametrów statycznych (architektura) i dynamicznych (trening/przeszukiwanie) do plików konfiguracyjnych.
+- [ ] **4.2** Implementacja `src/neural/architectures.py` – budowa sieci neuronowej (warstwy splotowe, bloki rezydualne, głowica oceniająca szanse na wygraną Value Head, głowica wybierająca ruchy Policy Head).
+- [ ] **4.3** Implementacja `src/search/evaluator.py` (Część 2) – podłączenie `NeuralEvaluator` oraz **Wskaźnika predykcji wygranej** (przeliczanie wyjścia sieci `[-1, 1]` na procentową szansę zwycięstwa na żywo podczas gry).
+- [ ] **4.4** Implementacja `src/neural/inspector.py` oraz **trybu diagnostycznego** w `Human vs AI` – podgląd liczby parametrów, wag, aktywacji warstw, gradientów, entropii decyzji oraz rozkładu Policy/Value na żywo.
+- [ ] **4.5** Implementacja `src/neural/version_manager.py` oraz inicjalizacja `models/registry.md` – zapis/odczyt bezstratnych checkpointów (wagi, optymalizator, scheduler, `config_snapshot`, `metadata`) i śledzenie rodowodu eksperymentów (*experiment lineage tracking*).
+- [ ] **4.6** Implementacja `src/neural/loss.py` – matematyczna funkcja straty mówiąca sieci, jak bardzo pomyliła się w ocenie pozycji i wyborze ruchu.
 
-### Faza 5: Nauka Sieci Neuronowej – Poziomy Wytrenowania AI
+### Faza 5: Headless Potok Treningowy – Poziomy Wytrenowania AI
 
 - [ ] **5.1** Przygotowanie danych i `src/training/dataset.py` – konwersja pobranych z internetu gier PGN do formatu binarnego `np.memmap` (bezpieczne dla pamięci RAM).
-- [ ] **5.2** Implementacja `src/training/supervised.py` – **Poziom 1 AI (AI wytrenowane na historycznych grach)**: proces uczenia sieci na ruchach silnych graczy, obserwacja spadku błędu (loss) i zapisanie wytrenowanej wersji modelu.
-- [ ] **5.3** Implementacja `src/training/self_play.py` – **Poziom 2 AI (AI wytrenowane przez grę AI vs AI)**: system, w którym sieć gra sama ze sobą, generuje nowe doświadczenia i uczy się na własnych wygranych oraz przegranych.
-- [ ] **5.4** Implementacja `src/training/transfer.py` – uczenie transferowe i gałęziowe (kontynuacja treningu bez nadpisywania bazy) oraz opcjonalna destylacja wiedzy (Knowledge Distillation) z silników UCI.
+- [ ] **5.2** Implementacja `src/training/trainer.py` oraz `train.py` – **Headless Training Orchestrator & Lossless Lifecycle Control**: niezależny od interfejsu gry proces treningowy z bezstratnym pauzowaniem (`pause`), wznawianiem (`resume`, z odtworzeniem stanu optymalizatora, schedulera i epoki), automatycznym `checkpointing` oraz logowaniem telemetrii treningowej na żywo.
+- [ ] **5.3** Implementacja `src/training/supervised.py` – **Poziom 1 AI (AI wytrenowane na historycznych grach)**: proces uczenia sieci na ruchach silnych graczy, obserwacja spadku błędu (loss) i zapisanie wytrenowanej wersji modelu.
+- [ ] **5.4** Implementacja `src/training/self_play.py` – **Poziom 2 AI (AI wytrenowane przez grę AI vs AI)**: system, w którym sieć gra sama ze sobą, generuje nowe doświadczenia i uczy się na własnych wygranych oraz przegranych.
+- [ ] **5.5** Implementacja `src/training/transfer.py` – uczenie transferowe i gałęziowe (kontynuacja treningu bez nadpisywania bazy) oraz opcjonalna destylacja wiedzy (*Knowledge Distillation*) ze Stockfisha (UCI).
 
 ### Faza 6: Głębokość Przewidywania Ruchów i Połączenie Wszystkiego
 
-- [ ] **6.1** Implementacja `src/search/search_tree.py` – **Moc sieci i głębokość przewidywania**: algorytm przeszukiwania drzewa gry (Alpha-Beta / MCTS) z możliwością ustawienia głębokości liczenia ruchów w przód.
+- [ ] **6.1** Implementacja `src/search/search_tree.py` – **Moc sieci i głębokość przewidywania**: algorytm przeszukiwania drzewa gry (Alpha-Beta / MCTS) z konfigurowalną głębokością oraz zbieraniem statystyk drzewa (*search tree statistics* dla trybu diagnostycznego).
 - [ ] **6.2** Stworzenie **Poziomu 3 AI (Połączenie wszystkiego)**: integracja wyuczonej sieci (z gier historycznych oraz AI vs AI) z algorytmem głębokiego przewidywania ruchów w przód.
 
-### Faza 7: Zewnętrzne Silniki, Benchmarki i Rozbudowa Badawcza
+### Faza 7: Benchmarki Turniejowe, Analiza Badawcza i Optymalizacja
 
-- [ ] **7.1** Implementacja `src/engine/uci_engine.py` – obsługa protokołu UCI, komunikacja z silnikami zewnętrznymi (np. Stockfish) z regulacją siły gry / limitu Elo.
-- [ ] **7.2** Implementacja `src/search/benchmark.py` – zautomatyzowane turnieje wielopartiowe (multi-game benchmarks) do obiektywnego porównywania wersji modeli i liczenia rankingów.
-- [ ] **7.3** Eksperymenty badawcze – porównywanie wersji sieci w meczach AI vs AI, analiza zachowania wag i map cech w `inspector.py`, optymalizacja wydajnościowa na M2 i RTX 3070.
+- [ ] **7.1** Implementacja `src/search/benchmark.py` – zautomatyzowane turnieje wielopartiowe (*multi-game benchmarks*: model vs model oraz model vs Stockfish na zadanych limitach Elo) do obiektywnego rankingu wersji.
+- [ ] **7.2** Eksperymenty badawcze – porównywanie gałęzi treningowych, analiza wag i map cech w `inspector.py`, optymalizacja wydajnościowa na M2 (`mps`) i RTX 3070 (`cuda`).
 
 ### Faza 8: Integracja z Platformą Webową (Laravel MVC & Stateless API) – *Ścieżka Równoległa / Early MVP*
 
-*Uwaga architektoniczna:* Faza ta nie musi czekać na zakończenie treningu sieci neuronowej (Fazy 4–6). Może być realizowana równolegle w oknach długiego treningu. Wczesne grywalne MVP opiera się na silniku reguł w Pythonie i adapterze zewnętrznego silnika UCI (Stockfish), a autorskie modele AI są dołączane do API po zakończeniu ich uczenia.
+*Warunek startu:* Odblokowana od razu po ukończeniu **Zadania 2.5** (`BoardManager` + `uci_engine.py` ze Stockfishem). Może być rozwijana równolegle do Faz 3–7. Autorskie sieci neuronowe są podpinane do API jako kolejne poziomy AI po zakończeniu ich treningu.
 
-- [ ] **8.1** Orkiestracja wielousługowa Docker Compose (`docker-compose.yml`: relacyjna baza danych PostgreSQL/MySQL, serwer testowego mailingu Mailpit, kontener aplikacji Laravel).
-- [ ] **8.2** Implementacja bezstanowego API HTTP/JSON w Pythonie (`src/api/app.py`) – obsługa legalności ruchów, stanu planszy oraz zapytań do silnika zewnętrznego UCI (Stockfish) na potrzeby wczesnego MVP.
+- [ ] **8.1** Implementacja bezstanowego API HTTP/JSON w Pythonie (`src/api/app.py`) – walidacja ruchów, obsługa FEN oraz zapytań do silnika zewnętrznego UCI (Stockfish) na potrzeby wczesnego MVP.
+- [ ] **8.2** Konteneryzacja i orkiestracja Docker (`Dockerfile` dla Python API oraz `docker-compose.yml`: PostgreSQL/MySQL, serwer testowego mailingu Mailpit, kontener aplikacji Laravel/Sail, sieć wewnętrzna).
 - [ ] **8.3** Aplikacja webowa Laravel MVC – architektura, schemat relacyjnej bazy danych (konta, mecze, historia posunięć, rankingi).
 - [ ] **8.4** Bezpieczeństwo i uwierzytelnianie – rejestracja, logowanie, Two-Factor Authentication (2FA) oraz transakcyjny mailing testowy przez Mailpit.
 - [ ] **8.5** Klient HTTP w Laravel, webowy interfejs szachownicy oraz późniejsze podpięcie autorskich modeli sieci neuronowej (po Fazach 4–6).
@@ -159,10 +172,11 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 
 ## 4. Rejestr Wersji Sieci Neuronowej (Model Version Summary)
 
-| ID Wersji     | Poziom AI          | Opis treningu i architektury      | Liczba parametrów | Głębokość (Search) | Status              |
-| :------------ | :----------------- | :-------------------------------- | :---------------- | :----------------- | :------------------ |
-| `v0.0-random` | Tier 0             | Brak sieci – losowe ruchy legalne | 0                 | 0                  | Ukończony (Faza 2)  |
-| `v1.0-init`   | Tier 1 (Untrained) | Sieć zainicjowana losowymi wagami | Do ustalenia      | 1                  | Planowany (Faza 4)  |
+| ID Wersji       | Rodzic (Lineage) | Poziom AI          | Opis treningu i architektury          | Liczba parametrów | Głębokość (Search) | Status              |
+| :-------------- | :--------------- | :----------------- | :------------------------------------ | :---------------- | :----------------- | :------------------ |
+| `v0.0-random`   | `—`              | Tier 0             | Brak sieci – losowe ruchy legalne     | 0                 | 0                  | Ukończony (Faza 2)  |
+| `uci-stockfish` | `external`       | External UCI       | Zewnętrzny silnik UCI (limit Elo)     | Zewnętrzny        | Konfigurowalna     | Planowany (Faza 2.5)|
+| `v1.0-init`     | `—`              | Tier 1 (Untrained) | Sieć zainicjowana losowymi wagami     | Do ustalenia      | 1                  | Planowany (Faza 4)  |
 
 ---
 
@@ -176,3 +190,4 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 - **[2026-10-28]** – Ukończono Zadanie 2.1: zaimplementowano moduł `src/ui/board_view.py` (wizualizacja szachownicy w terminalu, perspektywa Białe/Czarne, wyróżnianie ruchów ANSI, boczny panel stanu gry oraz pasek predykcji wygranej) wraz z pakietem 11 testów jednostkowych w `tests/test_board_view.py`. Łącznie 37 testów przechodzi pomyślnie.
 - **[2026-10-28]** – Ukończono Zadanie 2.2: zaimplementowano moduł `src/search/evaluator.py` (interfejs bazowy `BaseEvaluator`, Poziom 0 AI `RandomEvaluator`/`Tier0RandomAI` wybierający wyłącznie w 100% legalne ruchy bez sieci neuronowej) wraz z pakietem 9 testów jednostkowych w `tests/test_evaluator.py`. Łącznie 46 testów przechodzi pomyślnie.
 - **[2026-10-28]** – Ukończono Zadanie 2.3: zaimplementowano moduł `src/ui/menu.py` (obsługa menu głównego, konfiguracja trybów Human vs Human, Human vs AI, AI vs AI, wybór stron i poziomów AI, parsowanie komend exit, back move, history, switch side, load FEN) wraz z pakietem 12 testów jednostkowych w `tests/test_menu.py`. Łącznie 58 testów przechodzi pomyślnie.
+- **[2026-11-24]** – Zsynchronizowano dokumentację (`AGENTS.md`, `PROJECT_INSTRUCTIONS.md`, `CONTEXT.md`): dodano Docker Compose, przesunięto klienta UCI (Stockfish) do Fazy 2 (Zadanie 2.5 – grywalne MVP odblokowujące równoległą Fazę 8 Laravel), uzupełniono strukturę o `tests/`, `default_config.yaml`, `trainer.py`/`train.py`, `Dockerfile` oraz dodano kolumnę `Rodzic (Lineage)` w tabeli modeli.
