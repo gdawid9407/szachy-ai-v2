@@ -4,7 +4,7 @@
 
 - **Aktualna Faza:** Faza 2 – Interfejs Gry, Menu, Poziom 0 AI i Zewnętrzny Silnik UCI (Grywalne MVP)
 - **Aktualne Zadanie:** Zadanie 2.4 – Implementacja `src/ui/game_controller.py` oraz `main.py` – połączenie planszy i menu w działającą grę obsługującą tryby: Human vs Human, Human vs AI, AI vs AI
-- **Ostatnio ukończone zadanie:** Zadanie 2.3 – Implementacja `src/ui/menu.py` oraz `tests/test_menu.py` (menu wyboru trybów, stron i poziomów AI, parsowanie komend exit, back move, history, switch side, load FEN)
+- **Ostatnio ukończone zadanie:** Zadanie 2.3 – Rozbudowa `src/ui/menu.py` oraz `tests/test_menu.py` do pełnego Kreatora Wyboru (`GRA / NAUKA / STAN I METRYKI`, wspólny kreator `PlayerConfig`, `GameConfig`, `TrainingConfig`, presety FEN, diagnostyka środowiska, komendy `fen` odczyt/zapis, `eval/hint`, `save` PGN – 63 testy jednostkowe przechodzą pomyślnie)
 - **Aktywne blokery / Problemy:** Brak
 
 ### Zablokowane Niezmienniki Techniczne (Locked Invariants)
@@ -34,7 +34,8 @@
     │   └── processed/                  # Przetworzone pliki binarne pod np.memmap (states.bin, targets.bin)
     │
     ├── models/
-    │   ├── checkpoints/                # Bezstratne checkpointy (.pt: wagi, optimizer, scheduler, config, lineage)
+    │   ├── <linia_treningowa>/         # Hierarchiczne katalogi linii (metadata.json z polem parent + checkpointy *.pt)
+    │   ├── checkpoints/                # Bezstratne checkpointy robocze (.pt: wagi, optimizer, scheduler, config, lineage)
     │   └── registry.md                 # Katalog wersji modeli i rodowód eksperymentów (lineage tracking)
     │
     ├── src/
@@ -50,7 +51,7 @@
     │   ├── ui/                         # Interfejs gry, szachownica i menu (CLI)
     │   │   ├── __init__.py
     │   │   ├── board_view.py           # Wyświetlanie dużej, przejrzystej szachownicy i wskaźnika wygranej
-    │   │   ├── menu.py                 # Menu: exit, back move, historia, wybór/zmiana strony, FEN, poziom AI
+    │   │   ├── menu.py                 # Kreator Wyboru (GRA / NAUKA / STAN I METRYKI), PlayerConfig/GameConfig, presety FEN, parser komend
     │   │   └── game_controller.py      # Pętla gry i tryby: Human vs Human, Human vs AI (diagnostyka), AI vs AI
     │   │
     │   ├── representation/             # Tłumaczenie szachownicy na matematykę dla sieci AI
@@ -121,7 +122,7 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 
 - [x] **2.1** Implementacja `src/ui/board_view.py` – rysowanie dużej, przejrzystej szachownicy z oznaczeniami pól oraz miejscem na wskaźnik predykcji wygranej.
 - [x] **2.2** Implementacja `src/search/evaluator.py` (Część 1) – stworzenie **Poziomu 0 AI (AI bez wiedzy)**, które wybiera losowe, ale w 100% legalne ruchy.
-- [x] **2.3** Implementacja `src/ui/menu.py` – obsługa opcji: wyjście (`exit`), cofnięcie ruchu (`back move`), wyświetlenie historii ruchów, wybór strony przed grą, zmiana strony w trakcie gry, załadowanie pozycji FEN, wybór trybu gry i poziomu AI.
+- [x] **2.3** Implementacja `src/ui/menu.py` – Kreator Wyboru (`GRA / NAUKA / STAN I METRYKI`), wspólny wybór agenta AI (`Bot Poziom 0 / Silnik UCI / Własna Sieć`), presety FEN, podsumowanie przed startem oraz obsługa komend (`exit`, `back`, `history`, `switch`, `fen` odczyt/zapis, `eval/hint`, `save`).
 - [ ] **2.4** Implementacja `src/ui/game_controller.py` oraz `main.py` – połączenie planszy i menu w działającą grę obsługującą tryby: **Human vs Human**, **Human vs AI**, **AI vs AI**.
 - [ ] **2.5** Implementacja `src/engine/uci_engine.py` – **Zewnętrzny silnik UCI (np. Stockfish)** z konfigurowalnym limitem siły gry (`UCI_LimitStrength`, `UCI_Elo` / `Skill Level`) oraz integracja z kontrolerem gry. *(Domyka grywalne MVP i odblokowuje równoległą realizację Fazy 8 – Laravel MVC).*
 
@@ -191,3 +192,4 @@ Realizacja odbywa się małymi etapami. Żaden kolejny krok nie może zostać ro
 - **[2026-10-28]** – Ukończono Zadanie 2.2: zaimplementowano moduł `src/search/evaluator.py` (interfejs bazowy `BaseEvaluator`, Poziom 0 AI `RandomEvaluator`/`Tier0RandomAI` wybierający wyłącznie w 100% legalne ruchy bez sieci neuronowej) wraz z pakietem 9 testów jednostkowych w `tests/test_evaluator.py`. Łącznie 46 testów przechodzi pomyślnie.
 - **[2026-10-28]** – Ukończono Zadanie 2.3: zaimplementowano moduł `src/ui/menu.py` (obsługa menu głównego, konfiguracja trybów Human vs Human, Human vs AI, AI vs AI, wybór stron i poziomów AI, parsowanie komend exit, back move, history, switch side, load FEN) wraz z pakietem 12 testów jednostkowych w `tests/test_menu.py`. Łącznie 58 testów przechodzi pomyślnie.
 - **[2026-11-24]** – Zsynchronizowano dokumentację (`AGENTS.md`, `PROJECT_INSTRUCTIONS.md`, `CONTEXT.md`): dodano Docker Compose, przesunięto klienta UCI (Stockfish) do Fazy 2 (Zadanie 2.5 – grywalne MVP odblokowujące równoległą Fazę 8 Laravel), uzupełniono strukturę o `tests/`, `default_config.yaml`, `trainer.py`/`train.py`, `Dockerfile` oraz dodano kolumnę `Rodzic (Lineage)` w tabeli modeli.
+- **[2026-11-25]** – Przebudowano `src/ui/menu.py` oraz `tests/test_menu.py` na docelowy Kreator Wyboru (`GRA / NAUKA / STAN I METRYKI`, wspólny kreator agenta `PlayerConfig`, uniwersalny `GameConfig`, `TrainingConfig`, presety FEN, diagnostyka sprzętu/UCI/linii modeli w `models/`, nowe komendy `fen` odczyt, `eval/hint`, `save` PGN). Zsynchronizowano `PROJECT_INSTRUCTIONS.md` oraz `CONTEXT.md`. Łącznie 63 testy jednostkowe przechodzą pomyślnie.

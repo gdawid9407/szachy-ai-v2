@@ -118,21 +118,27 @@ System przewiduje dwukierunkową komunikację z zewnętrznymi silnikami szachowy
 Interfejs terminalowy (CLI) z czytelną separacją warstwy prezentacji, umożliwiającą późniejsze podpięcie interfejsu graficznego (GUI) oraz integrację webową:
 
 - **Wygląd szachownicy:** Duża, przejrzysta szachownica z wyraźnymi oznaczeniami kolumn (`a-h`), wierszy (`1-8`), symbolami bierek (Unicode/ASCII) i podświetleniem ostatniego ruchu (ANSI).
-- **Menu gry i komendy:**
-  - `exit` – bezpieczne opuszczenie gry.
-  - `back move` – cofnięcie ruchu (wraz z przywróceniem stanu sprzed ruchu).
-  - `history` – wyświetlenie pełnej listy ruchów wykonanych w aktualnej grze.
-  - `side select` – wybór koloru bierek przed rozpoczęciem partii.
-  - `switch side` – dynamiczna zmiana strony (przejęcie bierek przeciwnika) w trakcie trwania gry.
-  - `load board (FEN)` – wczytanie dowolnego ustawienia szachownicy z notacji FEN (z walidacją syntaktyczną i semantyczną).
-- **Tryby rozgrywki:**
-  - `Human vs Human` – klasyczna partia dwuosobowa.
-  - `Human vs AI` – gra człowieka przeciwko wybranej sieci neuronowej lub zewnętrznemu silnikowi UCI. Zawiera **tryb diagnostyczno-testowy** z podglądem na żywo telemetryki modelu (wektor prawdopodobieństw ruchów, ocena pozycji Value, statystyki przeszukiwania).
-  - `AI vs AI` – pojedyncze pojedynki oraz **wielopartiowe turnieje porównawcze (multi-game benchmarks)** do obiektywnego rankingu modeli i badania postępów uczenia.
+- **Menu gry (Kreator Wyboru) i komendy:**
+  - **Struktura główna:** Podział na `[1] GRA` (tylko inferencja, bez zmiany wag), `[2] NAUKA` (kreator konfiguracji `TrainingConfig` przekazywanej do niezależnego potoku treningowego) oraz `[3] STAN I METRYKI` (diagnostyka akceleratora, wykryte silniki UCI, skanowanie katalogu linii w `models/`).
+  - **Wspólny Kreator Agenta AI (`PlayerConfig`):** Jednolity wybór agenta używany we wszystkich trybach gry i asyście (`Bot bazowy Poziom 0` / `Silnik zewnętrzny UCI` z limitem Elo, głębokości lub czasu / `Własna Sieć AI` z wyborem linii, checkpointu i trybu MCTS/Raw Policy).
+  - **Nawigacja i FEN:** Domyślne wartości pod `[Enter]`, powrót `[0]` na każdym kroku, gotowe presety pozycji startowych (FEN), ręczne wklejanie FEN z walidacją oraz ekran podsumowania przed startem.
+  - **Komendy w trakcie rozgrywki:**
+    - `exit` / `quit` – bezpieczne opuszczenie gry.
+    - `back` / `undo` – cofnięcie ruchu (wraz z przywróceniem stanu sprzed ruchu).
+    - `history` – wyświetlenie pełnej listy ruchów wykonanych w aktualnej grze.
+    - `side select` / `switch` – wybór koloru bierek przed partią oraz dynamiczna zmiana strony w trakcie gry.
+    - `fen` oraz `fen <kod_fen>` – eksport bieżącego FEN do skopiowania oraz wczytanie dowolnej pozycji (z walidacją syntaktyczną i semantyczną).
+    - `eval` / `hint` – jednorazowe zapytanie o ocenę pozycji i sugerowany ruch.
+    - `save` / `pgn` – zapis bieżącej partii do pliku PGN.
+- **Tryby rozgrywki (`GameConfig`):**
+  - `Human vs Human` – klasyczna partia dwuosobowa z opcjonalną **cichą asystą AI w tle** (pasek oceny pozycji i komenda `eval/hint` bez ingerencji w ruchy graczy).
+  - `Human vs AI` – gra człowieka przeciwko wybranej sieci neuronowej, Botowi Poziomu 0 lub zewnętrznemu silnikowi UCI. Zawiera **tryb diagnostyczno-testowy** z podglądem na żywo telemetryki modelu (wektor prawdopodobieństw ruchów, ocena pozycji Value, statystyki przeszukiwania, cofanie ruchów).
+  - `AI vs AI` – pojedyncze pojedynki oraz **wielopartiowe turnieje porównawcze (multi-game benchmarks)** z zamianą kolorów i wyborem trybu prezentacji (*Na żywo z pauzą / Krok po kroku / Szybki benchmark bez rysowania planszy*).
+  - `Konfigurator własny (Sandbox)` – dowolna para graczy (Człowiek / Bot / UCI / Sieć), niestandardowa pozycja startowa FEN, tryb testowy oraz opcjonalny zapis do PGN.
 
 ### 4.2 Potok Treningowy (Headless Training Pipeline)
 
-Proces treningu sieci neuronowej jest w pełni odseparowany (headless) od interfejsu interaktywnego i wspiera różnorodne paradygmaty uczenia:
+Proces treningu sieci neuronowej jest w pełni odseparowany (*headless*) od interfejsu interaktywnego (uruchamiany niezależnie przez `train.py`; gałąź `[2] NAUKA` w `menu.py` służy wyłącznie do wyklikania kontraktu `TrainingConfig` i delegacji do `trainer.py`, bez mieszania logiki uczenia w UI) i wspiera różnorodne paradygmaty uczenia:
 
 - **Poziom 0 (AI bez wiedzy):** Losowe ruchy legalne (baza odniesienia i test integralności silnika).
 - **Poziom 1 (Supervised Learning):** Uczenie nadzorowane na historycznych bazach partii mistrzowskich (PGN) konwertowanych do strumieniowanych plików binarnych (`numpy.memmap`).
@@ -150,7 +156,7 @@ Proces treningu sieci neuronowej jest w pełni odseparowany (headless) od interf
   - `epoch`, `global_step` oraz opcjonalnie stany generatorów losowych (`rng_states`),
   - `config_snapshot` – pełna migawka konfiguracji statycznej i dynamicznej z chwili zapisu,
   - `metadata` – `version_id`, `parent_id` (rodowód), paradygmat treningu i metryki straty.
-- **Śledzenie rodowodu eksperymentów (Experiment Lineage Tracking):** Rejestr `models/registry.md` dokumentujący drzewo wersji modeli, gałęzie rodzicielskie (`parent_id`), liczbę epok, parametry oraz uzyskany ranking turniejowy.
+- **Śledzenie rodowodu eksperymentów (Experiment Lineage Tracking):** Hierarchiczna struktura katalogów linii treningowych w `models/<nazwa_linii>/` (pliki `metadata.json` z polem `parent` oraz checkpointy `*.pt`) uzupełniona o zbiorczy rejestr `models/registry.md` dokumentujący drzewo wersji modeli, liczbę epok, parametry oraz uzyskany ranking turniejowy.
 - **Pełny wgląd w sieć neuronową (`inspector.py` i telemetria):**
   - **Telemetria treningowa (w trakcie uczenia):** krzywe straty (Policy / Value / Total Loss), normy i rozkład gradientów, dynamika wag, bieżący *learning rate* oraz czas kroku.
   - **Introspekcja wnioskowania (na żywo w inferencji):** liczba parametrów, aktywacje warstw konwolucyjnych (mapy cech), rozkład prawdopodobieństwa ruchów (Policy), ocena pozycji (Value), entropia decyzji, statystyki drzewa przeszukiwania (MCTS) oraz wskaźnik predykcji wygranej $\text{Szansa } (\%) = \frac{\text{Value} + 1}{2} \times 100\%$.
