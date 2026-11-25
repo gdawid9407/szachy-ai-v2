@@ -35,7 +35,11 @@ def run_cli(input_func: Callable[[str], str] = input) -> None:
         if action == MainMenuAction.PLAY:
             game_config = menu.prompt_game_wizard(input_func=input_func)
             if game_config is not None:
-                controller.run_match(game_config, input_func=input_func)
+                controller.run_match(
+                    game_config,
+                    input_func=input_func,
+                    ask_save_at_end=True,
+                )
             continue
 
         if action == MainMenuAction.TRAIN:

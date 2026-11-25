@@ -143,6 +143,66 @@ class TestGameController(unittest.TestCase):
             self.assertLessEqual(res.moves_count, 20)
             self.assertGreater(res.moves_count, 0)
 
+    def test_post_game_save_prompt_save_and_discard(self) -> None:
+        """Weryfikuje pytanie na końcu gry: zapis do PGN z własną nazwą oraz odrzucenie."""
+        cfg = GameConfig(
+            mode=GameMode.HUMAN_VS_HUMAN,
+            white=PlayerConfig(AgentType.HUMAN, "Człowiek"),
+            black=PlayerConfig(AgentType.HUMAN, "Człowiek"),
+            save_pgn=False,
+        )
+        # 1. Zapis z własną nazwą: ruch e2e4 -> exit -> [1] Zapisz -> nazwa 'moja_partia'
+        save_inputs = iter(["e2e4", "exit", "1", "moja_partia"])
+        with patch("sys.stdout", new=io.StringIO()):
+            summary_saved = self.controller.run_match(
+                cfg,
+                input_func=lambda _: next(save_inputs),
+                ask_save_at_end=True,
+            )
+
+        self.assertIsNotNone(summary_saved.series_pgn_path)
+        assert summary_saved.series_pgn_path is not None
+        self.assertEqual(summary_saved.series_pgn_path.name, "moja_partia.pgn")
+        self.assertTrue(summary_saved.series_pgn_path.exists())
+        self.assertIn("1. e4", summary_saved.series_pgn_path.read_text(encoding="utf-8"))
+
+        # 2. Odrzucenie: ruch d2d4 -> exit -> [Enter = Odrzuć]
+        discard_inputs = iter(["d2d4", "exit", ""])
+        with patch("sys.stdout", new=io.StringIO()):
+            summary_discarded = self.controller.run_match(
+                cfg,
+                input_func=lambda _: next(discard_inputs),
+                ask_save_at_end=True,
+            )
+
+        self.assertIsNone(summary_discarded.series_pgn_path)
+        self.assertIsNone(summary_discarded.results[0].pgn_path)
+
+    def test_post_series_save_combined_pgn(self) -> None:
+        """Sprawdza zapis zbiorczego pliku PGN po zakończeniu serii 3 partii AI vs AI."""
+        cfg = GameConfig(
+            mode=GameMode.AI_VS_AI,
+            white=PlayerConfig(AgentType.RANDOM_BOT, "Bot A"),
+            black=PlayerConfig(AgentType.RANDOM_BOT, "Bot B"),
+            num_games=3,
+            swap_colors=True,
+            display_mode=AiDisplayMode.FAST_BENCHMARK,
+        )
+        inputs = iter(["1", "seria_testowa"])
+        with patch("sys.stdout", new=io.StringIO()):
+            summary = self.controller.run_match(
+                cfg,
+                input_func=lambda _: next(inputs),
+                max_plies=10,
+                ask_save_at_end=True,
+            )
+
+        self.assertIsNotNone(summary.series_pgn_path)
+        assert summary.series_pgn_path is not None
+        self.assertEqual(summary.series_pgn_path.name, "seria_testowa.pgn")
+        content = summary.series_pgn_path.read_text(encoding="utf-8")
+        self.assertEqual(content.count('[Event "Szachy AI v2 CLI"]'), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

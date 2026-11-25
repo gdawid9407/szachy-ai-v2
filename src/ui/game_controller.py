@@ -15,11 +15,12 @@ Obsługuje:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
+import re
 import time
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 import chess
 import chess.pgn
 
@@ -48,6 +49,7 @@ class GameResult:
     black_name: str
     final_fen: str
     pgn_path: Optional[Path] = None
+    pgn_text: str = ""
 
 
 @dataclass
@@ -60,6 +62,7 @@ class SeriesSummary:
     player_b_wins: int = 0
     draws: int = 0
     results: List[GameResult] = field(default_factory=list)
+    series_pgn_path: Optional[Path] = None
 
     def format_report(self) -> str:
         """Zwraca czytelną tabelę wyników serii meczowej."""
@@ -132,14 +135,13 @@ class GameController:
     # Eksport partii do formatu PGN
     # --------------------------------------------------------------------------
 
-    def export_pgn(
-        self,
+    @staticmethod
+    def build_pgn_text(
         board_manager: BoardManager,
         white_name: str,
         black_name: str,
-        output_path: Optional[Path] = None,
-    ) -> Path:
-        """Zapisuje bieżący stan i historię partii do standardowego pliku .pgn."""
+    ) -> str:
+        """Buduje tekst partii w standardzie PGN (z nagłówkami i ewentualnym FEN)."""
         game = chess.pgn.Game.from_board(board_manager.board)
         game.headers["Event"] = "Szachy AI v2 CLI"
         game.headers["Site"] = "Local"
@@ -147,16 +149,89 @@ class GameController:
         game.headers["White"] = white_name
         game.headers["Black"] = black_name
         game.headers["Result"] = board_manager.get_game_result()
+        return str(game)
 
+    @staticmethod
+    def _sanitize_filename(raw_name: str) -> str:
+        """Oczyszcza nazwę pliku podaną przez użytkownika z niebezpiecznych znaków."""
+        cleaned = re.sub(r"[^a-zA-Z0-9_\-]+", "_", raw_name.strip()).strip("_")
+        return cleaned
+
+    def _resolve_pgn_path(self, prefix: str, custom_name: Optional[str] = None) -> Path:
+        """Tworzy bezpieczną ścieżkę docelową pliku .pgn w katalogu eksportu."""
+        self.pgn_output_dir.mkdir(parents=True, exist_ok=True)
+        if custom_name:
+            safe_stem = self._sanitize_filename(custom_name)
+            if safe_stem:
+                return self.pgn_output_dir / f"{safe_stem}.pgn"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        return self.pgn_output_dir / f"{prefix}_{timestamp}.pgn"
+
+    def export_pgn(
+        self,
+        board_manager: BoardManager,
+        white_name: str,
+        black_name: str,
+        output_path: Optional[Path] = None,
+        custom_name: Optional[str] = None,
+    ) -> Path:
+        """Zapisuje bieżący stan i historię partii do standardowego pliku .pgn."""
+        pgn_text = self.build_pgn_text(board_manager, white_name, black_name)
         if output_path is None:
-            self.pgn_output_dir.mkdir(parents=True, exist_ok=True)
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-            output_path = self.pgn_output_dir / f"game_{timestamp}.pgn"
+            output_path = self._resolve_pgn_path(prefix="game", custom_name=custom_name)
         else:
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        output_path.write_text(str(game) + "\n", encoding="utf-8")
+        output_path.write_text(pgn_text + "\n", encoding="utf-8")
         return output_path
+
+    def export_pgn_text(
+        self,
+        pgn_texts: List[str],
+        prefix: str = "game",
+        custom_name: Optional[str] = None,
+    ) -> Path:
+        """Zapisuje jedną lub wiele partii (zbiorczy plik PGN serii) na dysk."""
+        output_path = self._resolve_pgn_path(prefix=prefix, custom_name=custom_name)
+        combined = "\n\n".join(text.strip() for text in pgn_texts if text.strip())
+        output_path.write_text(combined + "\n", encoding="utf-8")
+        return output_path
+
+    def _prompt_post_game_save(
+        self,
+        is_series: bool,
+        games_count: int,
+        input_func: Callable[[str], str] = input,
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Pyta użytkownika na końcu rozgrywki (lub serii), czy zapisać ją do PGN
+        do późniejszej analizy przez AI, czy odrzucić.
+        """
+        header = (
+            f"Co zrobić z serią {games_count} rozegranych partii?"
+            if is_series
+            else "Co zrobić z zakończoną rozgrywką?"
+        )
+        save_label = (
+            "[1] Zapisz wszystkie partie do jednego zbiorczego pliku PGN"
+            if is_series
+            else "[1] Zapisz do pliku PGN (do późniejszej analizy AI / Lichess)"
+        )
+        while True:
+            print("------------------------------------------------------------")
+            print(f"  {header}")
+            print(f"  {save_label}")
+            print("  [2] Odrzuć (nie zapisuj) [Enter]")
+            print("------------------------------------------------------------")
+            choice = input_func("Wybór (1-2) [Enter = Odrzuć]: ").strip().lower()
+            if choice in ("2", "", "n", "nie", "0"):
+                return False, None
+            if choice in ("1", "t", "tak", "s", "save"):
+                custom = input_func(
+                    "Nazwa pliku (bez .pgn) [Enter = automatyczna z datą]: "
+                ).strip()
+                return True, (custom if custom else None)
+            print("Niepoprawny wybór! Wpisz 1 (zapisz) lub 2 / Enter (odrzuć).")
 
     # --------------------------------------------------------------------------
     # Uruchamianie meczu (1 partia lub seria N partii)
@@ -168,6 +243,7 @@ class GameController:
         input_func: Callable[[str], str] = input,
         sleep_func: Callable[[float], None] = time.sleep,
         max_plies: Optional[int] = None,
+        ask_save_at_end: bool = False,
     ) -> SeriesSummary:
         """
         Przeprowadza pojedynczą partię lub serię N partii zgodnie z GameConfig.
@@ -226,6 +302,30 @@ class GameController:
 
         if config.num_games > 1:
             print(summary.format_report())
+
+        # Pytanie końcowe: zapisać rozgrywkę / serię do PGN czy odrzucić?
+        has_any_moves = any(res.moves_count > 0 for res in summary.results)
+        if ask_save_at_end and not config.save_pgn and has_any_moves:
+            is_series = summary.games_played > 1
+            should_save, custom_name = self._prompt_post_game_save(
+                is_series=is_series,
+                games_count=summary.games_played,
+                input_func=input_func,
+            )
+            if should_save:
+                pgn_texts = [res.pgn_text for res in summary.results if res.pgn_text]
+                prefix = "series" if is_series else "game"
+                saved_path = self.export_pgn_text(
+                    pgn_texts=pgn_texts,
+                    prefix=prefix,
+                    custom_name=custom_name,
+                )
+                summary.series_pgn_path = saved_path
+                if not is_series and summary.results:
+                    summary.results[0] = replace(summary.results[0], pgn_path=saved_path)
+                print(f"Zapisano do pliku PGN: {saved_path}")
+            else:
+                print("Rozgrywka odrzucona (nie zapisano pliku).")
 
         return summary
 
@@ -428,6 +528,7 @@ class GameController:
             result_str = "*"
             reason_str = f"Osiągnięto limit półruchów ({max_plies})."
 
+        pgn_text = self.build_pgn_text(bm, white_cfg.describe(), black_cfg.describe())
         pgn_path: Optional[Path] = None
         if save_pgn:
             pgn_path = self.export_pgn(bm, white_cfg.describe(), black_cfg.describe())
@@ -444,6 +545,7 @@ class GameController:
             black_name=black_cfg.describe(),
             final_fen=bm.get_fen(),
             pgn_path=pgn_path,
+            pgn_text=pgn_text,
         )
 
     @staticmethod
