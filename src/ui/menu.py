@@ -323,7 +323,7 @@ class Menu:
         """Zwraca ekran wyboru trybu rozgrywki (Gałąź [1] GRA)."""
         lines = [
             "------------------------------------------------------------",
-            "  [1] GRA - Wybierz tryb rozgrywki:",
+            "  GRA — Wybierz tryb rozgrywki:",
             "  [1] Człowiek vs AI",
             "  [2] Człowiek vs Człowiek",
             "  [3] AI vs AI (Pojedyncza partia lub Seria N partii)",
@@ -369,10 +369,10 @@ class Menu:
         """Zwraca menu wyboru pozycji początkowej (FEN)."""
         lines = [
             "------------------------------------------------------------",
-            "  Pozycja początkowa (FEN):",
-            "  [Enter] Standardowa pozycja startowa",
-            "  [1] Wklej własny kod FEN (np. z Lichess / Chess.com)",
-            "  [2] Wybierz z gotowych pozycji testowych (Presety)",
+            "  Pozycja początkowa:",
+            "  [1] Standardowa pozycja startowa (klasyczne szachy) [Domyślna]",
+            "  [2] Wklej własny kod FEN (np. z Lichess / Chess.com)",
+            "  [3] Wybierz z gotowych pozycji testowych (Presety)",
             "  [0] Powrót",
             "------------------------------------------------------------",
         ]
@@ -428,7 +428,7 @@ class Menu:
         """Zwraca ekran wyboru metody treningu (Gałąź [2] NAUKA)."""
         lines = [
             "------------------------------------------------------------",
-            "  [2] NAUKA - Wybierz metodę treningu sieci:",
+            "  NAUKA — Wybierz metodę treningu sieci:",
             "  [1] Uczenie nadzorowane (Bazy PGN z internetu)",
             "  [2] Self-Play RL (Własna Sieć vs Własna Sieć)",
             "  [3] Destylacja wiedzy (Nauka od silnika zewnętrznego UCI)",
@@ -851,17 +851,17 @@ class Menu:
         """
         while True:
             print(self.format_fen_selection())
-            choice = input_func("Wybierz pozycję (0-2) [Enter = Startowa]: ").strip()
+            choice = input_func("Wybierz pozycję (0-3) [Enter = 1]: ").strip()
             if choice == "0":
                 return False, None
-            if choice == "":
+            if choice in ("1", ""):
                 return True, None
-            if choice == "1":
+            if choice == "2":
                 custom_fen = self.prompt_fen(input_func=input_func)
                 if custom_fen is not None:
                     return True, custom_fen
                 continue
-            if choice == "2":
+            if choice == "3":
                 print(self.format_fen_presets())
                 preset_idx = self._prompt_positive_int(
                     "Wybierz numer presetu",
@@ -874,7 +874,7 @@ class Menu:
                     continue
                 _, preset_fen = FEN_PRESETS[preset_idx - 1]
                 return True, None if preset_fen == chess.STARTING_FEN else preset_fen
-            print("Niepoprawny wybór! Naciśnij Enter albo wpisz 0, 1 lub 2.")
+            print("Niepoprawny wybór! Wpisz 0, 1, 2 lub 3 (albo naciśnij Enter).")
 
     def prompt_ai_display_mode(
         self,

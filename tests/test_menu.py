@@ -230,9 +230,9 @@ class TestMenu(unittest.TestCase):
     def test_game_wizard_human_vs_human_with_assist_and_preset(self) -> None:
         """Sprawdza Człowiek vs Człowiek z asystą w tle i presetem FEN."""
         with patch("sys.stdout", new=io.StringIO()):
-            # Tryb 2 -> asysta 't' -> agent '1' (Bot 0) -> pozycja '2' (Presety)
+            # Tryb 2 -> asysta 't' -> agent '1' (Bot 0) -> pozycja '3' (Presety)
             # -> preset '2' (Końcówka K+W) -> potwierdzenie [Enter]
-            inputs = iter(["2", "t", "1", "2", "2", ""])
+            inputs = iter(["2", "t", "1", "3", "2", ""])
             cfg = self.menu.prompt_game_wizard(input_func=lambda _: next(inputs))
             self.assertIsNotNone(cfg)
             assert cfg is not None
